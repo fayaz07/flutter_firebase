@@ -1,4 +1,4 @@
-import './firebase/auth/phone_auth.dart';
+import './firebase/auth/phone_auth_ui.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
