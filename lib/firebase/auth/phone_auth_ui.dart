@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,21 +17,37 @@ class PhoneAuth extends StatefulWidget {
 class _PhoneAuthState extends State<PhoneAuth> {
   double _height, _width, _logoPadding;
 
-  List<Country> countries = [];
+  List<Country> countries = [], showThisCountries = [];
+  StreamController<List<Country>> controller;
+  Stream<List<Country>> countriesStream;
+  Sink<List<Country>> countriesSink;
 
   @override
   void initState() {
+    controller = StreamController();
+    countriesStream = controller.stream;
+    countriesSink = controller.sink;
+
     loadCountriesJson();
     super.initState();
   }
 
+  @override
+  void dispose() {
+    countriesSink.close();
+    controller.close();
+    super.dispose();
+  }
+
   Future<List<Country>> loadCountriesJson() async {
+    countries.clear();
     var value = await DefaultAssetBundle.of(context)
         .loadString("data/country_phone_codes.json");
     var countriesJson = json.decode(value);
     for (var country in countriesJson) {
       countries.add(Country.fromJson(country));
     }
+    countriesSink.add(countries);
     return countries;
   }
 
@@ -106,10 +123,31 @@ class _PhoneAuthState extends State<PhoneAuth> {
         ],
       );
 
+  TextEditingController searchCountryController = TextEditingController();
+
   void selectCountries() {
     showDialog(
         context: context,
         builder: (BuildContext context) => selectCountryWidget());
+    searchCountryController.addListener(searchCountries);
+  }
+
+  searchCountries() {
+    String query = searchCountryController.text;
+    if (query.length == 0 || query.length == 1) {
+      countriesSink.add(countries);
+    } else if (query.length >= 2 && query.length <= 5) {
+      List<Country> searchResults = [];
+      searchResults.clear();
+      countries.forEach((Country c) {
+        if (c.toString().contains(query)) searchResults.add(c);
+      });
+      countriesSink.add(searchResults);
+    } else {
+      //No results
+      List<Country> searchResults = [];
+      countriesSink.add(searchResults);
+    }
   }
 
   Widget selectCountryWidget() => Dialog(
@@ -121,36 +159,53 @@ class _PhoneAuthState extends State<PhoneAuth> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.only(left: 8.0, top: 8.0, bottom: 2.0, right: 8.0),
+                padding: const EdgeInsets.only(
+                    left: 8.0, top: 8.0, bottom: 2.0, right: 8.0),
                 child: Card(
                   child: TextFormField(
+                    controller: searchCountryController,
                     decoration: InputDecoration(
                         hintText: 'Search your country',
-                        contentPadding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 10.0, bottom: 10.0),
+                        contentPadding: const EdgeInsets.only(
+                            left: 5.0, right: 5.0, top: 10.0, bottom: 10.0),
                         border: InputBorder.none),
                   ),
                 ),
               ),
               SizedBox(
                 height: 300.0,
-                child: ListView.builder(
-                  itemCount: countries.length,
-                  itemBuilder: (BuildContext context, int i) =>
-                      selectableWidget(countries[i]),
-                ),
+                child: StreamBuilder<List<Country>>(
+                    stream: countriesStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) if (snapshot.data.length == 0)
+                        return Center(
+                          child: Text('Your search found no results'),
+                        );
+                      else
+                        return ListView.builder(
+                          itemCount: snapshot.data.length,
+                          itemBuilder: (BuildContext context, int i) =>
+                              selectableWidget(snapshot.data[i]),
+                        );
+                      else if (snapshot.hasError)
+                        return Center(
+                          child: Text('Seems, there is an error'),
+                        );
+                      return Center(child: CircularProgressIndicator());
+                    }),
               )
             ],
           ),
         ),
       );
 
-  Widget selectableWidget(Country country) => GestureDetector(
-        onTap: () {
-          // TODO: Select this country
-        },
-        child: Material(
-          color: Colors.white,
-          type: MaterialType.canvas,
+  Widget selectableWidget(Country country) => Material(
+        color: Colors.white,
+        type: MaterialType.canvas,
+        child: InkWell(
+          onTap: () {
+            // TODO: Select this country
+          },
           child: Padding(
             padding: const EdgeInsets.only(
                 left: 10.0, right: 10.0, top: 10.0, bottom: 10.0),

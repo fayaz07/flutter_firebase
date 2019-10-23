@@ -8,4 +8,9 @@ class Country {
       code: json["code"],
       dialCode: json["dial_code"],
       flag: json["flag"]);
+
+  @override
+  String toString() {
+    return 'Country{name: $name, code: $code, dialCode: $dialCode}';
+  }
 }
