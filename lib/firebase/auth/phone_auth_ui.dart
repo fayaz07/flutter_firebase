@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_firebase/data_models/countries.dart';
 import 'package:flutter_firebase/utils/constants.dart';
+import 'phone_auth_widgets.dart';
 
 /*
  *  PhoneAuthUI - this file contains whole ui and controllers of ui
@@ -20,6 +21,7 @@ class PhoneAuth extends StatefulWidget {
    */
   Color cardBackgroundColor = Color(0xFF6874C2);
   String logo = Assets.firebase;
+  String appName = "Awesome app";
 
   @override
   _PhoneAuthState createState() => _PhoneAuthState();
@@ -33,7 +35,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
    *    will be a list of Country model, Country model contains name, dialCode, flag and code for various countries
    *    and below params are all related to StreamBuilder
    */
-  double _height, _width, _logoPadding;
+  double _height, _width, _fixedPadding;
 
   List<Country> countries = [];
   StreamController<List<Country>> _countriesStreamController;
@@ -45,23 +47,18 @@ class _PhoneAuthState extends State<PhoneAuth> {
    *  and it's listener will take care of the rest
    */
   TextEditingController _searchCountryController = TextEditingController();
+  TextEditingController _phoneNumberController = TextEditingController();
 
   /*
    *  This will be the index, we will modify each time the user selects a new country from the dropdown list(dialog),
    *  As a default case, we are using India as default country, index = 31
    */
-  int _selectedCountryIndex = 31;
+  int _selectedCountryIndex = 100;
+
+  bool _isCountriesDataFormed = false;
 
   @override
   void initState() {
-    // Initialising components required for StreamBuilder
-    // We will not be using _countriesStreamController anywhere, but just to initalize Stream & Sink from that
-    // _countriesStream will give us the data what we need(output) - that will be used in StreamBuilder widget
-    // _countriesSink is the place where we send the data(input)
-    _countriesStreamController = StreamController();
-    _countriesStream = _countriesStreamController.stream;
-    _countriesSink = _countriesStreamController.sink;
-
     super.initState();
   }
 
@@ -91,7 +88,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
     }
 
     //Finally adding the initial data to the _countriesSink
-    _countriesSink.add(countries);
+    // _countriesSink.add(countries);
     return countries;
   }
 
@@ -101,12 +98,21 @@ class _PhoneAuthState extends State<PhoneAuth> {
     //  _logoPadding will be a constant, scaling it according to device's size
     _height = MediaQuery.of(context).size.height;
     _width = MediaQuery.of(context).size.width;
-    _logoPadding = _height * 0.025;
+    _fixedPadding = _height * 0.025;
 
-    //  Scaffold: Using a Scaffold widget as parent
-    //  SafeArea: As a precaution - wrapping all child descendants in SafeArea, so that even notched phones won't loose data
-    //  Center: As we are just having Card widget - making it to stay in Center would really look good
-    //  SingleChildScrollView: There can be chances arising where
+    WidgetsBinding.instance.addPostFrameCallback((Duration d) {
+      if (countries.length < 240) {
+        loadCountriesJson().whenComplete(() {
+          setState(() => _isCountriesDataFormed = true);
+        });
+      }
+    });
+
+    /*  Scaffold: Using a Scaffold widget as parent
+     *  SafeArea: As a precaution - wrapping all child descendants in SafeArea, so that even notched phones won't loose data
+     *  Center: As we are just having Card widget - making it to stay in Center would really look good
+     *  SingleChildScrollView: There can be chances arising where
+     */
     return Scaffold(
       backgroundColor: Colors.white.withOpacity(0.95),
       body: SafeArea(
@@ -123,193 +129,252 @@ class _PhoneAuthState extends State<PhoneAuth> {
    *  Widget hierarchy ->
    *    Scaffold -> SafeArea -> Center -> SingleChildScrollView -> Card()
    *    Card -> FutureBuilder -> Column()
-   *
    */
   Widget _getBody() => Card(
         color: widget.cardBackgroundColor,
         elevation: 2.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        child: SizedBox(
+        child: Container(
           height: _height * 8 / 10,
           width: _width * 8 / 10,
 
-          // Fetching countries data from JSON file and storing them in a List of Country model:
-          // ref:- List<Country> countries
-          // Until the data is fetched, there will be CircularProgressIndicator showing, describing something is on it's way
-          child: FutureBuilder<List<Country>>(
-              future: loadCountriesJson(),
-              builder: (BuildContext context,
-                  AsyncSnapshot<List<Country>> snapshot) {
-                return snapshot.hasData
-                    ? _getColumnBody()
-                    : Center(child: CircularProgressIndicator());
-              }),
+          /*
+           * Fetching countries data from JSON file and storing them in a List of Country model:
+           * ref:- List<Country> countries
+           * Until the data is fetched, there will be CircularProgressIndicator showing, describing something is on it's way
+           * (Previously there was a FutureBuilder rather that the below thing, which created unexpected exceptions and had to be removed)
+           */
+          child: _isCountriesDataFormed
+              ? _getColumnBody()
+              : Center(child: CircularProgressIndicator()),
         ),
       );
 
   Widget _getColumnBody() => Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          //  Logo: scaling to occupy 2 parts of 10 in the whole height of device
           Padding(
-            padding: EdgeInsets.all(_logoPadding),
-            child: _getLogo(),
+            padding: EdgeInsets.all(_fixedPadding),
+            child: PhoneAuthWidgets.getLogo(
+                logoPath: widget.logo, height: _height * 0.2),
           ),
 
-          //  Select your country, this will be a custom DropDown menu, rather than just as a dropDown
-          //  onTap of this, will show a Dialog asking the user to select country they reside,
-          //  according to their selection, prefix will change in the PhoneNumber TextFormField
+          // AppName:
+          Text(widget.appName,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.w700)),
+
           Padding(
-            padding: EdgeInsets.only(left: _logoPadding, right: _logoPadding),
-            child: _dropDownWidgetSelectCountry(),
+            padding: EdgeInsets.only(top: _fixedPadding, left: _fixedPadding),
+            child: PhoneAuthWidgets.subTitle('Select your country'),
           ),
 
-          //  PhoneNumber TextFormFielda
+          /*
+           *  Select your country, this will be a custom DropDown menu, rather than just as a dropDown
+           *  onTap of this, will show a Dialog asking the user to select country they reside,
+           *  according to their selection, prefix will change in the PhoneNumber TextFormField
+           */
           Padding(
-            padding: EdgeInsets.all(_logoPadding),
-            child: Card(
-              child: TextFormField(
-                key: Key('EnterPhone-TextFormField'),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  errorMaxLines: 1,
-                ),
+            padding: EdgeInsets.only(left: _fixedPadding, right: _fixedPadding),
+            child: PhoneAuthWidgets.selectCountryDropDown(
+                countries[_selectedCountryIndex], showCountries),
+          ),
+
+          //  Subtitle for Enter your phone
+          Padding(
+            padding: EdgeInsets.only(top: 10.0, left: _fixedPadding),
+            child: PhoneAuthWidgets.subTitle('Enter your phone'),
+          ),
+          //  PhoneNumber TextFormFields
+          Padding(
+            padding: EdgeInsets.only(
+                left: _fixedPadding,
+                right: _fixedPadding,
+                bottom: _fixedPadding),
+            child: PhoneAuthWidgets.phoneNumberField(_phoneNumberController,
+                countries[_selectedCountryIndex].dialCode),
+          ),
+
+          /*
+           *  Some informative text
+           */
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SizedBox(width: _fixedPadding),
+              Icon(Icons.info, color: Colors.white, size: 20.0),
+              SizedBox(width: 10.0),
+              Expanded(
+                child: RichText(
+                    text: TextSpan(children: [
+                  TextSpan(
+                      text: 'We will use this mobile number to send ',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w400)),
+                  TextSpan(
+                      text: 'One Time Password',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w700))
+                ])),
+              ),
+              SizedBox(width: _fixedPadding),
+            ],
+          ),
+
+          /*
+           *  Button: OnTap of this, it appends the dial code and the phone number entered by the user to send OTP,
+           *  knowing once the OTP has been sent to the user - the user will be navigated to a new Screen,
+           *  where is asked to enter the OTP he has received on his mobile (or) wait for the system to automatically detect the OTP
+           */
+          SizedBox(height: _fixedPadding*1.5),
+          RaisedButton(
+            elevation: 15.0,
+            onPressed: () {},
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Send OTP',
+                style: TextStyle(color: widget.cardBackgroundColor, fontSize: 18.0),
               ),
             ),
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
           ),
+
+
         ],
       );
 
   /*
    *  This will trigger a dialog, that will let the user to select their country, so the dialcode
    *  of their country will be automatically added at the end
-   *
    */
-  void selectCountries() {
+  showCountries() {
+    /*
+     * Initialising components required for StreamBuilder
+     * We will not be using _countriesStreamController anywhere, but just to initialize Stream & Sink from that
+     * _countriesStream will give us the data what we need(output) - that will be used in StreamBuilder widget
+     * _countriesSink is the place where we send the data(input)
+     */
+    _countriesStreamController = StreamController();
+    _countriesStream = _countriesStreamController.stream;
+    _countriesSink = _countriesStreamController.sink;
+    _countriesSink.add(countries);
+
     showDialog(
         context: context,
-        builder: (BuildContext context) => selectCountryWidget());
+        builder: (BuildContext context) => searchAndPickYourCountryHere(),
+        barrierDismissible: false);
     _searchCountryController.addListener(searchCountries);
   }
 
+  /*
+   *  This will be the listener for searching the query entered by user for their country, (dialog pop-up),
+   *  searches for the query and returns list of countries matching the query by adding the results to the sink of _countriesStream
+   */
   searchCountries() {
     String query = _searchCountryController.text;
     if (query.length == 0 || query.length == 1) {
       _countriesSink.add(countries);
+//      print('added all countries again');
     } else if (query.length >= 2 && query.length <= 5) {
       List<Country> searchResults = [];
       searchResults.clear();
       countries.forEach((Country c) {
-        if (c.toString().contains(query)) searchResults.add(c);
+        if (c.toString().toLowerCase().contains(query.toLowerCase()))
+          searchResults.add(c);
       });
       _countriesSink.add(searchResults);
+//      print('added few countries based on search ${searchResults.length}');
     } else {
       //No results
       List<Country> searchResults = [];
       _countriesSink.add(searchResults);
+//      print('no countries added');
     }
   }
 
-  Widget selectCountryWidget() => Dialog(
-        elevation: 8.0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        child: Container(
-          margin: const EdgeInsets.all(5.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 8.0, top: 8.0, bottom: 2.0, right: 8.0),
-                child: Card(
-                  child: TextFormField(
-                    controller: _searchCountryController,
-                    decoration: InputDecoration(
-                        hintText: 'Search your country',
-                        contentPadding: const EdgeInsets.only(
-                            left: 5.0, right: 5.0, top: 10.0, bottom: 10.0),
-                        border: InputBorder.none),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 300.0,
-                child: StreamBuilder<List<Country>>(
-                    key: Key('Countries-StreamBuilder'),
-                    stream: _countriesStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) if (snapshot.data.length == 0)
-                        return Center(
-                          child: Text('Your search found no results'),
-                        );
-                      else
-                        return ListView.builder(
-                          itemCount: snapshot.data.length,
-                          itemBuilder: (BuildContext context, int i) =>
-                              selectableWidget(snapshot.data[i]),
-                        );
-                      else if (snapshot.hasError)
-                        return Center(
-                          child: Text('Seems, there is an error'),
-                        );
-                      return Center(child: CircularProgressIndicator());
-                    }),
-              )
-            ],
-          ),
-        ),
-      );
-
-  Widget selectableWidget(Country country) => Material(
-        color: Colors.white,
-        type: MaterialType.canvas,
-        child: InkWell(
-          onTap: () {
-            // TODO: Select this country
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(
-                left: 10.0, right: 10.0, top: 10.0, bottom: 10.0),
-            child: Text(
-              "  " +
-                  country.flag +
-                  "  " +
-                  country.name +
-                  " (" +
-                  country.dialCode +
-                  ")",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-        ),
-      );
-
-  //  Logo: scaling to occupy 2 parts of 10 in the whole height of deive
-  Widget _getLogo() => Material(
-        type: MaterialType.transparency,
-        elevation: 50.0,
-        child: Image.asset(widget.logo, height: _height * 2 / 10),
-      );
-
-  Widget _dropDownWidgetSelectCountry() => Card(
-        child: InkWell(
-          onTap: () {
-            selectCountries();
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(
-                left: 4.0, right: 4.0, top: 8.0, bottom: 8.0),
-            child: Row(
+  /*
+   * Child for Dialog
+   * Contents:
+   *    SearchCountryTextFormField
+   *    StreamBuilder
+   *      - Shows a list of countries
+   */
+  Widget searchAndPickYourCountryHere() => WillPopScope(
+        onWillPop: () => Future.value(false),
+        child: Dialog(
+          key: Key('SearchCountryDialog'),
+          elevation: 8.0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+          child: Container(
+            margin: const EdgeInsets.all(5.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Expanded(
-                    child: Text(
-                        ' ${countries[_selectedCountryIndex].flag}  ${countries[_selectedCountryIndex].name} ')),
-                Icon(Icons.arrow_drop_down, size: 24.0)
+                //  TextFormField for searching country
+                PhoneAuthWidgets.searchCountry(_searchCountryController),
+
+                //  Returns a list of Countries that will change according to the search query
+                SizedBox(
+                  height: 300.0,
+                  child: StreamBuilder<List<Country>>(
+                      //key: Key('Countries-StreamBuilder'),
+                      stream: _countriesStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          // print(snapshot.data.length);
+                          return snapshot.data.length == 0
+                              ? Center(
+                                  child: Text('Your search found no results',
+                                      style: TextStyle(fontSize: 16.0)),
+                                )
+                              : ListView.builder(
+                                  itemCount: snapshot.data.length,
+                                  itemBuilder: (BuildContext context, int i) =>
+                                      PhoneAuthWidgets.selectableWidget(
+                                          snapshot.data[i],
+                                          (Country c) => selectThisCountry(c)),
+                                );
+                        } else if (snapshot.hasError)
+                          return Center(
+                            child: Text('Seems, there is an error',
+                                style: TextStyle(fontSize: 16.0)),
+                          );
+                        return Center(child: CircularProgressIndicator());
+                      }),
+                )
               ],
             ),
           ),
         ),
       );
+
+  /*
+   *  This callback is triggered when the user taps(selects) on any country from the available list in dialog
+   *    Resets the search value
+   *    Close the stream & sink
+   *    Updates the selected Country and adds dialCode as prefix according to the user's selection
+   */
+  void selectThisCountry(Country country) {
+    print(country);
+    _searchCountryController.clear();
+    Navigator.of(context).pop();
+    Future.delayed(Duration(milliseconds: 10)).whenComplete(() {
+      _countriesStreamController.close();
+      _countriesSink.close();
+
+      setState(() {
+        _selectedCountryIndex = countries.indexOf(country);
+      });
+    });
+  }
 }
