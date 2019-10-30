@@ -14,7 +14,7 @@ import 'phone_auth_widgets.dart';
  */
 
 // ignore: must_be_immutable
-class PhoneAuth extends StatefulWidget {
+class PhoneAuthGetPhone extends StatefulWidget {
   /*
    *  cardBackgroundColor & logo values will be passed to the constructor
    *  here we access these params in the _PhoneAuthState using "widget"
@@ -24,10 +24,11 @@ class PhoneAuth extends StatefulWidget {
   String appName = "Awesome app";
 
   @override
-  _PhoneAuthState createState() => _PhoneAuthState();
+  _PhoneAuthGetPhoneState createState() => _PhoneAuthGetPhoneState();
 }
 
-class _PhoneAuthState extends State<PhoneAuth> {
+
+class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
   /*
    *  _height & _width:
    *    will be calculated from the MediaQuery of widget's context
@@ -212,7 +213,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
                 child: RichText(
                     text: TextSpan(children: [
                   TextSpan(
-                      text: 'We will use this mobile number to send ',
+                      text: 'We will send ',
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.w400)),
                   TextSpan(
@@ -220,7 +221,11 @@ class _PhoneAuthState extends State<PhoneAuth> {
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 16.0,
-                          fontWeight: FontWeight.w700))
+                          fontWeight: FontWeight.w700)),
+                      TextSpan(
+                          text: ' to this mobile number',
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.w400)),
                 ])),
               ),
               SizedBox(width: _fixedPadding),
@@ -239,7 +244,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                'Send OTP',
+                'SEND OTP',
                 style: TextStyle(color: widget.cardBackgroundColor, fontSize: 18.0),
               ),
             ),

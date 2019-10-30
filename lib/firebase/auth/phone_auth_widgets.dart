@@ -30,6 +30,7 @@ class PhoneAuthWidgets {
         child: TextFormField(
           controller: controller,
           autofocus: true,
+          keyboardType: TextInputType.phone,
           key: Key('EnterPhone-TextFormField'),
           decoration: InputDecoration(
             border: InputBorder.none,
