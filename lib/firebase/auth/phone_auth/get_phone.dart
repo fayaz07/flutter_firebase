@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_firebase/data_models/countries.dart';
+import 'package:flutter_firebase/firebase/auth/phone_auth/code.dart';
+import 'package:flutter_firebase/firebase/auth/phone_auth/verify.dart';
 import 'package:flutter_firebase/utils/constants.dart';
-import 'phone_auth_widgets.dart';
+import 'code.dart' show FirebasePhoneAuth, phoneAuthState;
+import 'widgets.dart';
 
 /*
  *  PhoneAuthUI - this file contains whole ui and controllers of ui
@@ -26,7 +29,6 @@ class PhoneAuthGetPhone extends StatefulWidget {
   @override
   _PhoneAuthGetPhoneState createState() => _PhoneAuthGetPhoneState();
 }
-
 
 class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
   /*
@@ -68,8 +70,8 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
     // While disposing the widget, we should close all the streams and controllers
 
     // Disposing Stream components
-    _countriesSink.close();
-    _countriesStreamController.close();
+//    _countriesSink.close();
+//    _countriesStreamController.close();
 
     // Disposing _countriesSearchController
     _searchCountryController.dispose();
@@ -222,10 +224,10 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                           color: Colors.white,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w700)),
-                      TextSpan(
-                          text: ' to this mobile number',
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w400)),
+                  TextSpan(
+                      text: ' to this mobile number',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w400)),
                 ])),
               ),
               SizedBox(width: _fixedPadding),
@@ -237,23 +239,24 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
            *  knowing once the OTP has been sent to the user - the user will be navigated to a new Screen,
            *  where is asked to enter the OTP he has received on his mobile (or) wait for the system to automatically detect the OTP
            */
-          SizedBox(height: _fixedPadding*1.5),
+          SizedBox(height: _fixedPadding * 1.5),
           RaisedButton(
             elevation: 15.0,
-            onPressed: () {},
+            onPressed: () {
+              startPhoneAuth();
+            },
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 'SEND OTP',
-                style: TextStyle(color: widget.cardBackgroundColor, fontSize: 18.0),
+                style: TextStyle(
+                    color: widget.cardBackgroundColor, fontSize: 18.0),
               ),
             ),
             color: Colors.white,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0)),
           ),
-
-
         ],
       );
 
@@ -380,6 +383,21 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
       setState(() {
         _selectedCountryIndex = countries.indexOf(country);
       });
+    });
+  }
+
+  startPhoneAuth() {
+    FirebasePhoneAuth.instantiate(
+        phoneNumber: countries[_selectedCountryIndex].dialCode +
+            _phoneNumberController.text);
+
+    FirebasePhoneAuth.stateStream.listen((state) {
+      if (state == PhoneAuthState.CodeSent) {
+        Navigator.of(context).pushReplacement(CupertinoPageRoute(
+            builder: (BuildContext context) => PhoneAuthVerify()));
+      }
+      if (state == PhoneAuthState.Failed)
+        debugPrint("Seems there is an issue with it");
     });
   }
 }

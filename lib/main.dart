@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:flutter_firebase/firebase/auth/phone_auth_ui_verify.dart';
+import 'package:flutter_firebase/firebase/auth/phone_auth/verify.dart';
 import 'package:flutter_firebase/test_screen.dart';
-import './firebase/auth/phone_auth_ui_get_phone.dart';
+import 'firebase/auth/phone_auth/get_phone.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: PhoneAuthVerify(),
+      home: PhoneAuthGetPhone(),
       debugShowCheckedModeBanner: false,
     );
   }

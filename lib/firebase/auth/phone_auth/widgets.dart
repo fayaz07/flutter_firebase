@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data_models/countries.dart';
+import '../../../data_models/countries.dart';
 
 class PhoneAuthWidgets {
   static Widget getLogo({String logoPath, double height}) => Material(
