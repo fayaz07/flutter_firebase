@@ -13,7 +13,7 @@ import 'widgets.dart';
  *  PhoneAuthUI - this file contains whole ui and controllers of ui
  *  Background code will be in other class
  *  This code can be easily re-usable with any other service type, as UI part and background handling are completely from different sources
- *  TODO: Add other class to control background processes in phone auth verification using Firebase
+ *  code.dart - Class to control background processes in phone auth verification using Firebase
  */
 
 // ignore: must_be_immutable

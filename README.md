@@ -6,4 +6,4 @@ This repo consits of the implementation of all firebase features in a flutter ap
 
 | Feature | Android | iOS |
 |----------|-----------|------|
-|[Phone Auth](#)| Tested | Untested |
+|[Phone Auth](/lib/firebase/auth/phone_auth/)| Tested | Untested |
