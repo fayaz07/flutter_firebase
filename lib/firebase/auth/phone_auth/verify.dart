@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/firebase/auth/auth.dart';
 import 'package:flutter_firebase/firebase/auth/phone_auth/code.dart';
-import 'package:flutter_firebase/firebase/auth/phone_auth/widgets.dart';
+import 'package:flutter_firebase/utils/widgets.dart';
 import 'package:flutter_firebase/utils/constants.dart';
 
 import '../../../pin_test.dart';
@@ -32,15 +34,16 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
 
   @override
   void initState() {
-    print(FirebasePhoneAuth.phoneAuthState.isClosed);
-    FirebasePhoneAuth.phoneAuthState.close().whenComplete((){
-      FirebasePhoneAuth.phoneAuthState.sink.close();
-
-      print(FirebasePhoneAuth.phoneAuthState.isClosed);
-      if(FirebasePhoneAuth.phoneAuthState.isClosed)
-      FirebasePhoneAuth.phoneAuthState.stream
-          .listen((PhoneAuthState state) => print(state));
-    });
+////    print(FirebasePhoneAuth.phoneAuthState.isClosed);
+//    FirebasePhoneAuth.phoneAuthState.close().whenComplete(() {
+//      FirebasePhoneAuth.phoneAuthState.sink.close();
+//
+////      print(FirebasePhoneAuth.phoneAuthState.isClosed);
+//      //if (FirebasePhoneAuth.phoneAuthState.isClosed)
+//
+//    });
+    FirebasePhoneAuth.phoneAuthState.stream
+        .listen((PhoneAuthState state) => print(state));
     super.initState();
   }
 
@@ -79,7 +82,7 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
         color: widget.cardBackgroundColor,
         elevation: 2.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        child: Container(
+        child: SizedBox(
           height: _height * 8 / 10,
           width: _width * 8 / 10,
           child: _getColumnBody(),
@@ -105,62 +108,94 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
 
           SizedBox(height: 20.0),
 
+          //  Info text
           Row(
             children: <Widget>[
-              SizedBox(width: 20.0),
+              SizedBox(width: 16.0),
               Expanded(
                 child: RichText(
-                    text: TextSpan(children: [
-                  TextSpan(
-                      text: 'Please enter the ',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w400)),
-                  TextSpan(
-                      text: 'One Time Password',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w700)),
-                  TextSpan(
-                      text: ' sent to your mobile',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w400)),
-                ])),
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                          text: 'Please enter the ',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400)),
+                      TextSpan(
+                          text: 'One Time Password',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w700)),
+                      TextSpan(
+                        text: ' sent to your mobile',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w400),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              SizedBox(width: 20.0),
+              SizedBox(width: 16.0),
             ],
           ),
 
-          SizedBox(height: 15.0),
+          SizedBox(height: 16.0),
 
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              getField("1", focusNode1),
+              getPinField(key: "1", focusNode: focusNode1),
               SizedBox(width: 5.0),
-              getField("2", focusNode2),
+              getPinField(key: "2", focusNode: focusNode2),
               SizedBox(width: 5.0),
-              getField("3", focusNode3),
+              getPinField(key: "3", focusNode: focusNode3),
               SizedBox(width: 5.0),
-              getField("4", focusNode4),
+              getPinField(key: "4", focusNode: focusNode4),
               SizedBox(width: 5.0),
-              getField("5", focusNode5),
+              getPinField(key: "5", focusNode: focusNode5),
               SizedBox(width: 5.0),
-              getField("6", focusNode6),
+              getPinField(key: "6", focusNode: focusNode6),
               SizedBox(width: 5.0),
             ],
+          ),
+
+          SizedBox(height: 32.0),
+
+          RaisedButton(
+            elevation: 16.0,
+            onPressed: signIn,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'VERIFY',
+                style: TextStyle(
+                    color: widget.cardBackgroundColor, fontSize: 18.0),
+              ),
+            ),
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
           )
         ],
       );
 
-  Widget getField(String key, FocusNode fn) => SizedBox(
+  signIn() {
+    if (code.length != 6) {
+      //  TODO: show error
+    }
+    FirebasePhoneAuth.signInWithPhoneNumber(smsCode: code);
+  }
+
+  // This will return pin field - it accepts only single char
+  Widget getPinField({String key, FocusNode focusNode}) => SizedBox(
         height: 40.0,
         width: 35.0,
         child: TextField(
           key: Key(key),
           expands: false,
           autofocus: key.contains("1") ? true : false,
-          focusNode: fn,
+          focusNode: focusNode,
           onChanged: (String value) {
             if (value.length == 1) {
               code += value;
@@ -181,7 +216,7 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
                   FocusScope.of(context).requestFocus(focusNode6);
                   break;
                 default:
-                  FocusScope.of(context).unfocus();
+                  FocusScope.of(context).requestFocus(FocusNode());
                   break;
               }
             }

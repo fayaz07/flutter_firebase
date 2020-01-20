@@ -2,33 +2,55 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_firebase/firebase/auth/auth.dart';
 
-enum PhoneAuthState { Started, CodeSent, CodeResent, Verified, Failed, Error, AutoRetrievalTimeOut }
+enum PhoneAuthState {
+  Started,
+  CodeSent,
+  CodeResent,
+  Verified,
+  Failed,
+  Error,
+  AutoRetrievalTimeOut
+}
 
 class FirebasePhoneAuth {
-  static var firebaseAuth;
   static var _authCredential, actualCode, phone, status;
-  static StreamController<String> statusStream = StreamController();
-  static StreamController<PhoneAuthState> phoneAuthState = StreamController(sync: true);
+  static StreamController<String> statusStream =
+      StreamController.broadcast();
+  static StreamController<PhoneAuthState> phoneAuthState =
+      StreamController.broadcast();
   static Stream stateStream = phoneAuthState.stream;
 
   static instantiate({String phoneNumber}) async {
-    firebaseAuth = await FirebaseAuth.instance;
+    assert(phoneNumber != null);
     phone = phoneNumber;
+    print(phone);
     startAuth();
+  }
+
+  static dispose() {
+//    statusStream.close();
+//    phoneAuthState.close();
   }
 
   static startAuth() {
     statusStream.stream
-        .listen((String status) => debugPrint("PhoneAuth: " + status));
-
-    firebaseAuth.verifyPhoneNumber(
-        phoneNumber: phone,
-        timeout: Duration(seconds: 60),
-        verificationCompleted: verificationCompleted,
-        verificationFailed: verificationFailed,
-        codeSent: codeSent,
-        codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
+        .listen((String status) => print("PhoneAuth: " + status));
+    addStatus('Phone auth started');
+    FireBase.auth
+        .verifyPhoneNumber(
+            phoneNumber: phone.toString(),
+            timeout: Duration(seconds: 60),
+            verificationCompleted: verificationCompleted,
+            verificationFailed: verificationFailed,
+            codeSent: codeSent,
+            codeAutoRetrievalTimeout: codeAutoRetrievalTimeout)
+        .then((value) {
+      addStatus('Code sent');
+    }).catchError((error) {
+      addStatus(error.toString());
+    });
   }
 
   static final PhoneCodeSent codeSent =
@@ -62,7 +84,7 @@ class FirebasePhoneAuth {
       (AuthCredential auth) {
     addStatus('Auto retrieving verification code');
 
-    firebaseAuth.signInWithCredential(auth).then((AuthResult value) {
+    FireBase.auth.signInWithCredential(auth).then((AuthResult value) {
       if (value.user != null) {
         addStatus(status = 'Authentication successful');
         addState(PhoneAuthState.Verified);
@@ -77,29 +99,35 @@ class FirebasePhoneAuth {
     });
   };
 
-  static void signInWithPhoneNumber(String smsCode) async {
+  static void signInWithPhoneNumber({String smsCode}) async {
     _authCredential = PhoneAuthProvider.getCredential(
         verificationId: actualCode, smsCode: smsCode);
 
-    firebaseAuth
+    FireBase.auth
         .signInWithCredential(_authCredential)
-        .then((FirebaseUser user) async {
+        .then((AuthResult result) async {
       addStatus('Authentication successful');
       addState(PhoneAuthState.Verified);
       onAuthenticationSuccessful();
     }).catchError((error) {
       addState(PhoneAuthState.Error);
-      addStatus('Something has gone wrong, please try later(signInWithPhoneNumber) $error');
+      addStatus(
+          'Something has gone wrong, please try later(signInWithPhoneNumber) $error');
     });
   }
 
-  static onAuthenticationSuccessful() {}
+  static onAuthenticationSuccessful() {
+    //  TODO: handle authentication successful
+  }
 
-  static addState(PhoneAuthState state){
+  static addState(PhoneAuthState state) {
+
+    print(state);
     phoneAuthState.sink.add(state);
   }
 
   static void addStatus(String s) {
     statusStream.sink.add(s);
+    print(s);
   }
 }

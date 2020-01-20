@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:flutter_firebase/chat/lets_text.dart';
-import 'package:flutter_firebase/firebase/auth/phone_auth/verify.dart';
 import 'package:flutter_firebase/test_screen.dart';
 import 'firebase/auth/phone_auth/get_phone.dart';
 import 'package:flutter/material.dart';

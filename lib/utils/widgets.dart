@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data_models/countries.dart';
+import '../data_models/countries.dart';
 
 class PhoneAuthWidgets {
   static Widget getLogo({String logoPath, double height}) => Material(
@@ -40,7 +40,7 @@ class PhoneAuthWidgets {
         ),
       );
 
-  static Widget selectableWidget(Country country, Function selectThisCountry) =>
+  static Widget selectableWidget(Country country, Function(Country) selectThisCountry) =>
       Material(
         color: Colors.white,
         type: MaterialType.canvas,
@@ -85,5 +85,6 @@ class PhoneAuthWidgets {
 
   static Widget subTitle(String text) => Align(
       alignment: Alignment.centerLeft,
-      child: Text(' $text', style: TextStyle(color: Colors.white, fontSize: 14.0)));
+      child: Text(' $text',
+          style: TextStyle(color: Colors.white, fontSize: 14.0)));
 }

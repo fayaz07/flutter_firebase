@@ -7,7 +7,7 @@ import 'package:flutter_firebase/firebase/auth/phone_auth/code.dart';
 import 'package:flutter_firebase/firebase/auth/phone_auth/verify.dart';
 import 'package:flutter_firebase/utils/constants.dart';
 import 'code.dart' show FirebasePhoneAuth, phoneAuthState;
-import 'widgets.dart';
+import '../../../utils/widgets.dart';
 
 /*
  *  PhoneAuthUI - this file contains whole ui and controllers of ui
@@ -137,7 +137,7 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
         color: widget.cardBackgroundColor,
         elevation: 2.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        child: Container(
+        child: SizedBox(
           height: _height * 8 / 10,
           width: _width * 8 / 10,
 
@@ -241,10 +241,8 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
            */
           SizedBox(height: _fixedPadding * 1.5),
           RaisedButton(
-            elevation: 15.0,
-            onPressed: () {
-              startPhoneAuth();
-            },
+            elevation: 16.0,
+            onPressed: startPhoneAuth,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -276,11 +274,12 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
     _countriesSink = _countriesStreamController.sink;
     _countriesSink.add(countries);
 
+    _searchCountryController.addListener(searchCountries);
+
     showDialog(
         context: context,
         builder: (BuildContext context) => searchAndPickYourCountryHere(),
         barrierDismissible: false);
-    _searchCountryController.addListener(searchCountries);
   }
 
   /*
@@ -290,7 +289,8 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
   searchCountries() {
     String query = _searchCountryController.text;
     if (query.length == 0 || query.length == 1) {
-      _countriesSink.add(countries);
+      if(!_countriesStreamController.isClosed)
+        _countriesSink.add(countries);
 //      print('added all countries again');
     } else if (query.length >= 2 && query.length <= 5) {
       List<Country> searchResults = [];
@@ -391,13 +391,19 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
         phoneNumber: countries[_selectedCountryIndex].dialCode +
             _phoneNumberController.text);
 
-    FirebasePhoneAuth.stateStream.listen((state) {
-      if (state == PhoneAuthState.CodeSent) {
-        Navigator.of(context).pushReplacement(CupertinoPageRoute(
+    Navigator.of(context).pushReplacement(CupertinoPageRoute(
             builder: (BuildContext context) => PhoneAuthVerify()));
-      }
-      if (state == PhoneAuthState.Failed)
-        debugPrint("Seems there is an issue with it");
-    });
+
+//    FirebasePhoneAuth.stateStream.listen((state) {
+//
+//      print(state);
+//
+//      if (state == PhoneAuthState.CodeSent) {
+//        Navigator.of(context).pushReplacement(CupertinoPageRoute(
+//            builder: (BuildContext context) => PhoneAuthVerify()));
+//      }
+//      if (state == PhoneAuthState.Failed)
+//        debugPrint("Seems there is an issue with it");
+//    });
   }
 }
