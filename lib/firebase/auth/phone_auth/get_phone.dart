@@ -56,7 +56,7 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
    *  This will be the index, we will modify each time the user selects a new country from the dropdown list(dialog),
    *  As a default case, we are using India as default country, index = 31
    */
-  int _selectedCountryIndex = 100;
+  int _selectedCountryIndex = 31;
 
   bool _isCountriesDataFormed = false;
 
