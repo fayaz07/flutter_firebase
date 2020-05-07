@@ -1,21 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase/firebase/auth/auth.dart';
-import 'package:flutter_firebase/firebase/auth/phone_auth/code.dart';
-import 'package:flutter_firebase/utils/widgets.dart';
+import 'package:flutter_firebase/chat/lets_text.dart';
+import 'package:flutter_firebase/providers/phone_auth.dart';
 import 'package:flutter_firebase/utils/constants.dart';
+import 'package:flutter_firebase/utils/widgets.dart';
+import 'package:provider/provider.dart';
 
-import '../../../pin_test.dart';
-
-// ignore: must_be_immutable
 class PhoneAuthVerify extends StatefulWidget {
   /*
    *  cardBackgroundColor & logo values will be passed to the constructor
    *  here we access these params in the _PhoneAuthState using "widget"
    */
-  Color cardBackgroundColor = Color(0xFFFCA967);
-  String logo = Assets.firebase;
-  String appName = "Awesome app";
+  final Color cardBackgroundColor = Color(0xFFFCA967);
+  final String logo = Assets.firebase;
+  final String appName = "Awesome app";
 
   @override
   _PhoneAuthVerifyState createState() => _PhoneAuthVerifyState();
@@ -34,18 +31,11 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
 
   @override
   void initState() {
-////    print(FirebasePhoneAuth.phoneAuthState.isClosed);
-//    FirebasePhoneAuth.phoneAuthState.close().whenComplete(() {
-//      FirebasePhoneAuth.phoneAuthState.sink.close();
-//
-////      print(FirebasePhoneAuth.phoneAuthState.isClosed);
-//      //if (FirebasePhoneAuth.phoneAuthState.isClosed)
-//
-//    });
-    FirebasePhoneAuth.phoneAuthState.stream
-        .listen((PhoneAuthState state) => print(state));
     super.initState();
   }
+
+  final scaffoldKey =
+  GlobalKey<ScaffoldState>(debugLabel: "scaffold-verify-phone");
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +45,19 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
     _width = MediaQuery.of(context).size.width;
     _fixedPadding = _height * 0.025;
 
+    final phoneAuthDataProvider =
+    Provider.of<PhoneAuthDataProvider>(context, listen: false);
+
+    phoneAuthDataProvider.setMethods(
+      onStarted: onStarted,
+      onError: onError,
+      onFailed: onFailed,
+      onVerified: onVerified,
+      onCodeResent: onCodeResent,
+      onCodeSent: onCodeSent,
+      onAutoRetrievalTimeout: onAutoRetrievalTimeOut,
+    );
+
     /*
      *  Scaffold: Using a Scaffold widget as parent
      *  SafeArea: As a precaution - wrapping all child descendants in SafeArea, so that even notched phones won't loose data
@@ -62,6 +65,7 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
      *  SingleChildScrollView: There can be chances arising where
      */
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: Colors.white.withOpacity(0.95),
       body: SafeArea(
         child: Center(
@@ -180,11 +184,21 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
         ],
       );
 
+  _showSnackBar(String text) {
+    final snackBar = SnackBar(
+      content: Text('$text'),
+      duration: Duration(seconds: 2),
+    );
+//    if (mounted) Scaffold.of(context).showSnackBar(snackBar);
+    scaffoldKey.currentState.showSnackBar(snackBar);
+  }
+
   signIn() {
     if (code.length != 6) {
-      //  TODO: show error
+      _showSnackBar("Invalid OTP");
     }
-    FirebasePhoneAuth.signInWithPhoneNumber(smsCode: code);
+    Provider.of<PhoneAuthDataProvider>(context, listen: false)
+        .verifyOTPAndLogin(smsCode: code);
   }
 
   // This will return pin field - it accepts only single char
@@ -194,7 +208,8 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
         child: TextField(
           key: Key(key),
           expands: false,
-          autofocus: key.contains("1") ? true : false,
+//          autofocus: key.contains("1") ? true : false,
+          autofocus: false,
           focusNode: focusNode,
           onChanged: (String value) {
             if (value.length == 1) {
@@ -239,4 +254,47 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
 //                  borderSide: BorderSide(color: Colors.white))),
         ),
       );
+
+  onStarted() {
+    _showSnackBar("PhoneAuth started");
+//    _showSnackBar(phoneAuthDataProvider.message);
+  }
+
+  onCodeSent() {
+    _showSnackBar("OPT sent");
+//    _showSnackBar(phoneAuthDataProvider.message);
+  }
+
+  onCodeResent() {
+    _showSnackBar("OPT resent");
+//    _showSnackBar(phoneAuthDataProvider.message);
+  }
+
+  onVerified() async {
+    _showSnackBar(
+        "${Provider
+            .of<PhoneAuthDataProvider>(context, listen: false)
+            .message}");
+    await Future.delayed(Duration(seconds: 1));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (BuildContext context) => LetsChat()));
+  }
+
+  onFailed() {
+//    _showSnackBar(phoneAuthDataProvider.message);
+    _showSnackBar("PhoneAuth failed");
+  }
+
+  onError() {
+//    _showSnackBar(phoneAuthDataProvider.message);
+    _showSnackBar(
+        "PhoneAuth error ${Provider
+            .of<PhoneAuthDataProvider>(context, listen: false)
+            .message}");
+  }
+
+  onAutoRetrievalTimeOut() {
+    _showSnackBar("PhoneAuth autoretrieval timeout");
+//    _showSnackBar(phoneAuthDataProvider.message);
+  }
 }

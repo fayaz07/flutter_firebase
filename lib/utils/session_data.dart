@@ -1,4 +1,4 @@
-import 'package:flutter_firebase/data_models/countries.dart';
+import 'package:flutter_firebase/data_models/country.dart';
 
 class SessionData{
   static String countriesJson;
