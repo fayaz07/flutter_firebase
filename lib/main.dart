@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase/providers/countries.dart';
+import 'package:flutter_firebase/providers/email__and_oauth.dart';
 import 'package:flutter_firebase/providers/phone_auth.dart';
+import 'package:flutter_firebase/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
-
-import 'firebase/auth/phone_auth/get_phone.dart';
 
 void main() => runApp(FireApp());
 
@@ -18,10 +18,13 @@ class FireApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => PhoneAuthDataProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => AuthProvider(),
+        ),
       ],
       child: MaterialApp(
-        home: PhoneAuthGetPhone(),
-        debugShowCheckedModeBanner: false,
+        home: SplashScreen(),
+//        debugShowCheckedModeBanner: true,
       ),
     );
   }

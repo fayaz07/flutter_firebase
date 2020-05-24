@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, VoidCallback;
 import 'package:flutter/widgets.dart' show TextEditingController;
-import 'package:flutter_firebase/firebase/auth/auth.dart';
+import 'package:flutter_firebase/providers/firebase.dart';
 
 enum PhoneAuthState {
   Started,
@@ -74,7 +74,7 @@ class PhoneAuthDataProvider with ChangeNotifier {
     return true;
   }
 
-  _startAuth() {
+  _startAuth() async {
     final PhoneCodeSent codeSent =
         (String verificationId, [int forceResendingToken]) async {
       actualCode = verificationId;
@@ -110,10 +110,11 @@ class PhoneAuthDataProvider with ChangeNotifier {
         (AuthCredential auth) {
       _addStatusMessage('Auto retrieving verification code');
 
-      FireBase.auth.signInWithCredential(auth).then((AuthResult value) {
+      FirebaseProvider.auth.signInWithCredential(auth).then((AuthResult value) {
         if (value.user != null) {
           _addStatusMessage('Authentication successful');
           _addStatus(PhoneAuthState.Verified);
+          FirebaseProvider.currentUser = value.user;
           if (onVerified != null) onVerified();
         } else {
           if (onFailed != null) onFailed();
@@ -128,41 +129,44 @@ class PhoneAuthDataProvider with ChangeNotifier {
     };
 
     _addStatusMessage('Phone auth started');
-    FireBase.auth
-        .verifyPhoneNumber(
-            phoneNumber: phone.toString(),
-            timeout: Duration(seconds: 60),
-            verificationCompleted: verificationCompleted,
-            verificationFailed: verificationFailed,
-            codeSent: codeSent,
-            codeAutoRetrievalTimeout: codeAutoRetrievalTimeout)
-        .then((value) {
+    try {
+      await FirebaseProvider.auth.verifyPhoneNumber(
+          phoneNumber: phone.toString(),
+          timeout: Duration(seconds: 60),
+          verificationCompleted: verificationCompleted,
+          verificationFailed: verificationFailed,
+          codeSent: codeSent,
+          codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
+
+      /// if there is no issue, then likely the OTP is sent
+
       if (onCodeSent != null) onCodeSent();
       _addStatus(PhoneAuthState.CodeSent);
       _addStatusMessage('Code sent');
-    }).catchError((error) {
+    } catch (error) {
       if (onError != null) onError();
       _addStatus(PhoneAuthState.Error);
       _addStatusMessage(error.toString());
-    });
+    }
   }
 
   void verifyOTPAndLogin({String smsCode}) async {
-    _authCredential = PhoneAuthProvider.getCredential(
-        verificationId: actualCode, smsCode: smsCode);
+    try {
+      _authCredential = PhoneAuthProvider.getCredential(
+          verificationId: actualCode, smsCode: smsCode);
 
-    FireBase.auth
-        .signInWithCredential(_authCredential)
-        .then((AuthResult result) async {
+      AuthResult result =
+          await FirebaseProvider.auth.signInWithCredential(_authCredential);
       _addStatusMessage('Authentication successful');
       _addStatus(PhoneAuthState.Verified);
+      FirebaseProvider.currentUser = result.user;
       if (onVerified != null) onVerified();
-    }).catchError((error) {
+    } catch (error) {
       if (onError != null) onError();
       _addStatus(PhoneAuthState.Error);
       _addStatusMessage(
           'Something has gone wrong, please try later(signInWithPhoneNumber) $error');
-    });
+    }
   }
 
   _addStatus(PhoneAuthState state) {

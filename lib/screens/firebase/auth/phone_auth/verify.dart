@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase/chat/lets_text.dart';
 import 'package:flutter_firebase/providers/phone_auth.dart';
+import 'package:flutter_firebase/screens/chat/lets_text.dart';
 import 'package:flutter_firebase/utils/constants.dart';
 import 'package:flutter_firebase/utils/widgets.dart';
 import 'package:provider/provider.dart';
@@ -11,8 +11,6 @@ class PhoneAuthVerify extends StatefulWidget {
    *  here we access these params in the _PhoneAuthState using "widget"
    */
   final Color cardBackgroundColor = Color(0xFFFCA967);
-  final String logo = Assets.firebase;
-  final String appName = "Awesome app";
 
   @override
   _PhoneAuthVerifyState createState() => _PhoneAuthVerifyState();
@@ -35,7 +33,7 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
   }
 
   final scaffoldKey =
-  GlobalKey<ScaffoldState>(debugLabel: "scaffold-verify-phone");
+      GlobalKey<ScaffoldState>(debugLabel: "scaffold-verify-phone");
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +96,11 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
           //  Logo: scaling to occupy 2 parts of 10 in the whole height of device
           Padding(
             padding: EdgeInsets.all(_fixedPadding),
-            child: PhoneAuthWidgets.getLogo(
-                logoPath: widget.logo, height: _height * 0.2),
+            child: Logo(),
           ),
 
           // AppName:
-          Text(widget.appName,
+          Text(Constants.appName,
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: Colors.white,
