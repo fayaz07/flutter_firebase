@@ -1,6 +1,10 @@
 class Assets{
   static String _imagesRoot = "assets/images/";
   static String firebase = _imagesRoot + "firebase.png";
+<<<<<<< Updated upstream
+=======
+  static String logoWhos = "assets/logoWhos.png";
+>>>>>>> Stashed changes
 
   static const double fourBy1 = 4.0;
   static const double fourBy2 = 8.0;

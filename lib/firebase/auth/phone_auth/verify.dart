@@ -276,8 +276,32 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
             .of<PhoneAuthDataProvider>(context, listen: false)
             .message}");
     await Future.delayed(Duration(seconds: 1));
+<<<<<<< Updated upstream
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (BuildContext context) => LetsChat()));
+=======
+    FireBase.auth
+        .currentUser()
+        .then((currentUser) => Firestore.instance
+        .collection("users")
+        .document(currentUser.uid)
+        .setData({
+      "uid": currentUser.uid,
+      "nickname": " ",
+      "phone": "${Provider.of<PhoneAuthDataProvider>(context, listen: false).phone}",
+      "country":json.decode("${Provider.of<CountryProvider>(context, listen: false).selectedCountry.toString()}"),
+      'photoUrl': "",
+      'createdAt': DateTime.now().millisecondsSinceEpoch.toString(),
+
+    })
+        .then((result) => {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (BuildContext context) => LoginScreen(title: 'Welcome'))),
+
+    })
+        .catchError((err) => print(err)))
+        .catchError((err) => print(err));
+>>>>>>> Stashed changes
   }
 
   onFailed() {
