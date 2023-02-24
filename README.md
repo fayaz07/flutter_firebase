@@ -24,18 +24,18 @@ This repo consists of the implementation of all firebase features in a flutter a
 3. Add SHA1 key, check this [link](https://developers.google.com/android/guides/client-auth) for
    more info
    For debug version, run this command in your terminal:
-    ```
+    ```bash
     keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
     ```
 
    For release version, run this command in your terminal replacing the keystore_name and
    alias_name:
-    ```
+    ```bash
     keytool -list -v -keystore {keystore_name} -alias {alias_name}
     ```
 4. Enable Authentication **Sign-in providers** in firebase dashboard (as per your requirement)
 5. Install the app
 
-### Contributions || Issues
+### Contributions & Issues
 
 Feel free to open PR or issues
