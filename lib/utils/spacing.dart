@@ -1,0 +1,11 @@
+const double spacing00 = 2.0;
+const double spacing10 = 4.0;
+const double spacing20 = 8.0;
+const double spacing30 = 12.0;
+const double spacing40 = 16.0;
+const double spacing50 = 20.0;
+const double spacing60 = 24.0;
+const double spacing70 = 32.0;
+const double spacing80 = 36.0;
+const double spacing90 = 48.0;
+const double spacing100 = 64.0;
