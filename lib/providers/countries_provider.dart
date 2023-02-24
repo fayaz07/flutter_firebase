@@ -5,9 +5,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_firebase/data_models/country.dart';
 import 'package:flutter_firebase/utils/assets.dart';
 
-class CountryProvider with ChangeNotifier {
-  CountryProvider() {
-    loadCountriesFromJSON();
+class CountriesProvider with ChangeNotifier {
+  CountriesProvider() {
     searchController.addListener(_search);
   }
 
@@ -90,7 +89,7 @@ class CountryProvider with ChangeNotifier {
     searchResults = countries;
   }
 
-  void onCountrySelected(Country c) {
+  void selectCountry(Country c) {
     _selectedCountry = c;
     notifyListeners();
   }

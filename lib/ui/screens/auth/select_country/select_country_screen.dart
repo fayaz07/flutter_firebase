@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase/data_models/country.dart';
-import 'package:flutter_firebase/providers/countries.dart';
-import 'package:flutter_firebase/ui/widgets/SearchCountryTextField.dart';
-import 'package:flutter_firebase/ui/widgets/SelectableWidget.dart';
+import 'package:flutter_firebase/providers/countries_provider.dart';
+import 'package:flutter_firebase/ui/widgets/search_country_text_field.dart';
+import 'package:flutter_firebase/ui/widgets/selectable_widget.dart';
 import 'package:flutter_firebase/utils/assets.dart';
 import 'package:flutter_firebase/utils/spacing.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 class SelectCountryScreen extends StatelessWidget {
   const SelectCountryScreen({super.key});
 
-  PreferredSizeWidget appbar(CountryProvider countriesProvider) {
+  PreferredSizeWidget appbar(CountriesProvider countriesProvider) {
     return AppBar(
       title: const Text('Search your country'),
       bottom: PreferredSize(
@@ -61,17 +61,17 @@ class SelectCountryScreen extends StatelessWidget {
     );
   }
 
-  Widget buildBody(CountryProvider countriesProvider) {
+  Widget buildBody(CountriesProvider countriesProvider) {
     if (countriesProvider.searchResults.isEmpty) {
       return buildEmptyListWidget();
     }
     return buildCountriesList(
-        countriesProvider.searchResults, countriesProvider.onCountrySelected);
+        countriesProvider.searchResults, countriesProvider.selectCountry);
   }
 
   @override
   Widget build(BuildContext context) {
-    final countriesProvider = Provider.of<CountryProvider>(context);
+    final countriesProvider = Provider.of<CountriesProvider>(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: appbar(countriesProvider),
