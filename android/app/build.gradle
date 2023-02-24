@@ -23,12 +23,12 @@ if (flutterVersionName == null) {
 
 def flutterCompileSdkVersion = localProperties.getProperty('flutter.compileSdkVersion')
 if(flutterCompileSdkVersion == null) {
-    flutterCompileSdkVersion = '21'
+    flutterCompileSdkVersion = '32'
 }
 
 def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion')
 if(flutterMinSdkVersion == null) {
-    flutterMinSdkVersion = '32'
+    flutterMinSdkVersion = '21'
 }
 
 def flutterTargetSdkVersion = localProperties.getProperty('flutter.targetSdkVersion')
