@@ -1,16 +1,41 @@
-# flutter_firebase
+# Flutter with Firebase
 
-A new Flutter project.
+This repo consists of the implementation of all firebase features in a flutter application.
 
-## Getting Started
+### Status
 
-This project is a starting point for a Flutter application.
+| Feature                            | Android | iOS      |
+|------------------------------------|---------|----------|
+| [Phone Auth](/lib/ui/screens/auth) | Tested  | Untested |
+| [Chat](/lib/chat)                  | Tested  | Untested |
 
-A few resources to get you started if this is your first Flutter project:
+### Screenshots
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+#### Select Country Screen
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<img src="screenshots/select_country_1.png" width="30%" /> <img src="screenshots/select_country_2.png" width="30%" /> <img src="screenshots/select_country_3.png" width="30%" />
+
+### Configuration
+
+1. Clone the repository
+2. Create a project in firebase and connect the app to
+   firebase [How to?](https://medium.com/@fayaz07/firebase-phone-auth-with-flutter-db7e934ef46f) (
+   Check the first part of the article)
+3. Add SHA1 key, check this [link](https://developers.google.com/android/guides/client-auth) for
+   more info
+   For debug version, run this command in your terminal:
+    ```
+    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+    ```
+
+   For release version, run this command in your terminal replacing the keystore_name and
+   alias_name:
+    ```
+    keytool -list -v -keystore {keystore_name} -alias {alias_name}
+    ```
+4. Enable Authentication **Sign-in providers** in firebase dashboard (as per your requirement)
+5. Install the app
+
+### Contributions || Issues
+
+Feel free to open PR or issues
